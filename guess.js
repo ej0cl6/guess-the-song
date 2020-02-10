@@ -100,7 +100,8 @@ function load_links(){
 }
 
 function shuffle(array) {
-	var currentIndex = array.length, temporaryValue, randomIndex ;
+	var currentIndex = array.length;
+	var temporaryValue, randomIndex ;
 	while (0 !== currentIndex) {
 		randomIndex = Math.floor(Math.random() * currentIndex);
 		currentIndex -= 1;
