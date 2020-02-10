@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8"/>
+	<title>Guess Songs</title>
+	<style type="text/css">
+	body{
+		color: white;
+		background-color: black
+	}
+	</style>
+	<script>
+		var play_sec = 30;
+		var wait_sec = 10;
+		var play_list = ['bu7nU9Mhpyo','wSBXfzgqHtE','Ew4VvF0DPMc','FnV5wmmU0JM'];
+
+		function shuffle(array) {
+			var currentIndex = array.length, temporaryValue, randomIndex ;
+
+			// While there remain elements to shuffle...
+			while (0 !== currentIndex) {
+
+				// Pick a remaining element...
+				randomIndex = Math.floor(Math.random() * currentIndex);
+				currentIndex -= 1;
+
+				// And swap it with the current element.
+				temporaryValue = array[currentIndex];
+				array[currentIndex] = array[randomIndex];
+				array[randomIndex] = temporaryValue;
+			}
+
+			return array;
+		}
+
+		// 2. This code loads the IFrame Player API code asynchronously.
+		var tag = document.createElement('script');
+
+		tag.src = "https://www.youtube.com/iframe_api";
+		var firstScriptTag = document.getElementsByTagName('script')[0];
+		firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+		// 3. This function creates an <iframe> (and YouTube player)
+		//		after the API code downloads.
+		var player;
+		function onYouTubeIframeAPIReady() {
+			player = new YT.Player('player', {
+				height: '390',
+				width: '640',
+				videoId: play_list[0],
+				events: {
+					'onReady': onPlayerReady,
+					'onStateChange': onPlayerStateChange
+				}
+			});
+		}
+
+		// 4. The API will call this function when the video player is ready.
+		
+		function onPlayerReady(event) {
+			play_list = shuffle(play_list);
+			player.loadPlaylist(play_list, 0, 0, 'large');
+			// player.setLoop(true);
+			// player.setShuffle(true);
+			// event.target.playVideo();
+		}
+		
+		function onPlayerStateChange(event){
+			if (event.data == YT.PlayerState.PLAYING) {
+				document.getElementById("player").style.visibility = 'hidden';
+				set_countdown(play_sec);
+				setTimeout(show_title, play_sec*1000+50);
+			}
+		}
+
+		function show_title(){
+			document.getElementById("player").style.visibility = 'visible';
+			document.getElementById("title").innerText = player.getVideoData().title;
+			setTimeout(play_next, wait_sec*1000);
+		}
+
+		function play_next(){
+			document.getElementById("player").style.visibility = 'hidden';
+			player.nextVideo();
+		}
+
+		function set_countdown(sec){
+			document.getElementById("title").innerText = sec;
+			if(sec > 1)
+				setTimeout(set_countdown, 1*1000, sec-1);
+		}
+		
+
+
+	</script>
+
+</head>
+
+<body>
+	<div align="center">
+		<h2>Guess Songs</h2>
+		<div id="player" style="visibility: visible;"></div>
+		<br>
+		<br>
+		<button onClick="start();">Start</button>
+		<button onClick="swtich_hidden();">Hidden</button>
+		<br>
+		<br>
+		<div id="title" style="font-size: 40px; width: 800px; height: 300px;">Press Start!</div>
+		<br>
+		<br>
+		Paste your own links.<br>
+		<textarea cols="50" rows="10" id="url" style="color: black; background-color: Silver">
+
+		</textarea>
+		<br>
+		
+		<button onClick="load_list();">Play</button>
+	</div>
+	<script type="text/javascript">
+		function start(){
+			player.playVideo();
+		}
+
+		function swtich_hidden(){
+			if(document.getElementById("player").style.visibility == 'visible')
+				document.getElementById("player").style.visibility = 'hidden';
+			else
+				document.getElementById("player").style.visibility = 'visible';
+		}
+		
+		function get_v(url){
+			url = url.trim();
+			var hashes = url.slice(url.indexOf('?')+1).split('&');
+			for(var i=0; i< hashes.length; i++){
+				if(hashes[i].startsWith('v='))
+					return hashes[i].split('=')[1];
+			}
+		}
+
+		function clear_timeout(){
+			var highestTimeoutId = setTimeout(";");
+			for(var i=0 ; i<highestTimeoutId ; i++) {
+				clearTimeout(i); 
+			}
+		}
+
+		function load_list(){
+			var code_list = document.getElementById('url').value;
+			var play_list = code_list.split('\n');
+			play_list = play_list.map(get_v);
+			play_list = shuffle(play_list);
+			clear_timeout();
+			document.getElementById("player").style.visibility = 'hidden';
+			player.loadPlaylist(play_list, 0, 0, 'large');
+		}
+	</script>
+
+</body>
+</html>
