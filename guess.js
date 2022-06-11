@@ -1,12 +1,29 @@
-var play_sec = 30;
-var wait_sec = 10;
 var playlist = links.map(get_v);
-
+playlist = playlist.filter(p => p != "Invalid");
 var tag = document.createElement('script');
 tag.src = "https://www.youtube.com/iframe_api";
 var firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 var player;
+var run_flag = 1;
+var show_flag = 0;
+
+window.addEventListener('keydown', function (e) {
+	if(event.keyCode == 83){
+		if(run_flag)
+			player.pauseVideo();
+		else
+			player.playVideo();
+		run_flag = 1 - run_flag;
+	}
+	else if(event.keyCode == 78){
+		if(show_flag)
+			play_next();
+		else
+			show_title();
+		show_flag = 1 - show_flag;
+	}
+}, false);
 
 function onYouTubeIframeAPIReady() {
 	player = new YT.Player('player', {
@@ -14,8 +31,7 @@ function onYouTubeIframeAPIReady() {
 		width: '640',
 		videoId: playlist[0],
 		events: {
-			'onReady': onPlayerReady,
-			'onStateChange': onPlayerStateChange
+			'onReady': onPlayerReady
 		}
 	});
 }
@@ -23,47 +39,40 @@ function onYouTubeIframeAPIReady() {
 function onPlayerReady(event) {
 	playlist = shuffle(playlist);
 	player.loadPlaylist(playlist);
-}
-
-function onPlayerStateChange(event){
-	if (event.data == YT.PlayerState.PLAYING) {
-		document.getElementById("player").style.visibility = 'hidden';
-		set_countdown(play_sec);
-		setTimeout(show_title, play_sec*1000+50);
-	}
+	set_timer(1);
 }
 
 function show_title(){
+	clear_timer();
 	document.getElementById("player").style.visibility = 'visible';
 	document.getElementById("title").innerText = player.getVideoData().title;
-	setTimeout(play_next, wait_sec*1000);
 }
 
 function play_next(){
 	document.getElementById("player").style.visibility = 'hidden';
 	player.nextVideo();
-}
-
-function set_countdown(sec){
-	document.getElementById("title").innerText = sec;
-	if(sec > 1)
-		setTimeout(set_countdown, 1*1000, sec-1);
+	set_timer(1);
 }
 
 function preprocess(){
 	document.getElementById("url").value = links.join("\n");
-	document.getElementById("qtime").value = play_sec;
-	document.getElementById("atime").value = wait_sec;
+}
+
+function set_timer(sec){
+	document.getElementById("title").innerText = sec;
+	setTimeout(set_timer, 1*1000, sec+1);
+}
+
+function clear_timer(){
+	var highestTimeoutId = setTimeout(";");
+	for(var i=highestTimeoutId-1; i>=0 ; i--) {
+		clearTimeout(i); 
+	}
 }
 
 function start(){
-	apply();
 	player.playVideo();
-}
-
-function apply(){
-	play_sec = parseInt(document.getElementById("qtime").value);
-	wait_sec = parseInt(document.getElementById("atime").value);
+	set_timer(1);
 }
 
 function swtich_hidden(){
@@ -75,26 +84,27 @@ function swtich_hidden(){
 
 function get_v(url){
 	url = url.trim();
-	var hashes = url.slice(url.indexOf('?')+1).split('&');
-	for(var i=0; i< hashes.length; i++){
-		if(hashes[i].startsWith('v='))
-			return hashes[i].split('=')[1];
+	if(url.includes("www.youtube.com")){
+		var hashes = url.slice(url.indexOf('?')+1).split('&');
+		for(var i=0; i< hashes.length; i++){
+			if(hashes[i].startsWith('v='))
+				return hashes[i].split('=')[1];
+		}
 	}
-}
-
-function clear_timeout(){
-	var highestTimeoutId = setTimeout(";");
-	for(var i=0 ; i<highestTimeoutId ; i++) {
-		clearTimeout(i); 
+	else if(url.includes("youtu.be")){
+		elements = url.split("/");
+		return elements[elements.length-1];
 	}
+	return "Invalid";
 }
 
 function load_links(){
 	var code_list = document.getElementById('url').value;
 	var playlist = code_list.split('\n');
 	playlist = playlist.map(get_v);
+	playlist = playlist.filter(p => p != "Invalid");
 	playlist = shuffle(playlist);
-	clear_timeout();
+	clear_timer();
 	document.getElementById("player").style.visibility = 'hidden';
 	player.loadPlaylist(playlist);
 }
