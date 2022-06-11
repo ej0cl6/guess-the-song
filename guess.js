@@ -39,7 +39,6 @@ function onYouTubeIframeAPIReady() {
 function onPlayerReady(event) {
 	playlist = shuffle(playlist);
 	player.loadPlaylist(playlist);
-	set_timer(1);
 }
 
 function show_title(){
